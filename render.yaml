@@ -1,0 +1,31 @@
+# Render Blueprint — one web service, one persistent disk.
+# When you connect this repo to Render and choose "Apply Blueprint",
+# Render reads this file and provisions everything below automatically.
+# See https://render.com/docs/blueprint-spec for the full spec.
+
+services:
+  - type: web
+    name: travel-buddy
+    runtime: node
+    plan: starter        # required for persistent disks; ~$7/mo
+    region: oregon       # change to "frankfurt" / "singapore" for lower latency
+    branch: main         # the branch Render watches for auto-deploys
+    buildCommand: npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    disk:
+      name: travel-buddy-data
+      mountPath: /var/data    # SQLite file ends up at /var/data/travel.db
+      sizeGB: 1               # $0.25/mo per GB, plenty for SQLite
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATA_DIR
+        value: /var/data
+      - key: LOG_LEVEL
+        value: INFO
+      # Set this manually in the Render dashboard after the first deploy
+      # (Service → Environment → Add Secret Env Var). Don't commit it here.
+      - key: GEMINI_API_KEY
+        sync: false

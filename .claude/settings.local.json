@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Skill(claude-api)",
+      "Skill(claude-api:*)",
+      "Bash(node -e \"import\\('./src/services/summarizer.js'\\).then\\(m => console.log\\('summarizer.js loads ok'\\)\\).catch\\(e => { console.error\\(e\\); process.exit\\(1\\); }\\)\")"
+    ]
+  }
+}

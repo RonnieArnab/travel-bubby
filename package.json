@@ -1,0 +1,16 @@
+{
+  "name": "travel-buddy",
+  "version": "0.3.0",
+  "private": true,
+  "description": "Travel Buddy — root deploy scripts (client + server)",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "install:all": "cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm install && npm run build && cd ../server && npm install --omit=dev",
+    "start": "cd server && node src/index.js",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev"
+  }
+}
