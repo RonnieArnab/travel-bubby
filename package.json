@@ -4,7 +4,7 @@
   "private": true,
   "description": "Travel Buddy — root deploy scripts (client + server)",
   "engines": {
-    "node": ">=22"
+    "node": "22.x"
   },
   "scripts": {
     "install:all": "cd server && npm install && cd ../client && npm install",
