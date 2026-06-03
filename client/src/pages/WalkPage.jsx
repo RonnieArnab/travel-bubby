@@ -23,6 +23,7 @@ import {
   checkPin,
 } from "../lib/leafletIcon.js";
 import { Toast } from "../components/Toast.jsx";
+import { MapModeBar } from "../components/MapModeBar.jsx";
 import {
   enqueueWalkPoint,
   drainQueue,
@@ -313,9 +314,7 @@ export function WalkPage() {
     <div className="page walk-page">
       <div className="walk-header">
         <div className="row" style={{ alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <h1 style={{ margin: 0, fontSize: 22, fontFamily: "var(--font-display, 'UberMove'), Inter, sans-serif" }}>
-            Walk tracker
-          </h1>
+          <MapModeBar />
           <div style={{ flex: 1 }} />
           <span className={`health-pill ${isOnline ? "ok" : "warn"}`} style={{ width: "auto" }}>
             {isOnline ? <Wifi size={12} /> : <WifiOff size={12} />}

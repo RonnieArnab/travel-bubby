@@ -6,6 +6,7 @@ import { api } from "../lib/api.js";
 import { tileForStyle, modernPin, meIcon } from "../lib/leafletIcon.js";
 import { Toast } from "../components/Toast.jsx";
 import { usePrefs } from "../lib/usePrefs.js";
+import { MapModeBar } from "../components/MapModeBar.jsx";
 
 function distanceMeters(a, b) {
   const R = 6371000;
@@ -126,6 +127,7 @@ export function PlanPage() {
 
   return (
     <div className="page">
+      <div style={{ marginBottom: 16 }}><MapModeBar /></div>
       <div className="page-header">
         <div>
           <h1>Plan a route</h1>

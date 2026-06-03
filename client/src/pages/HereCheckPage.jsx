@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Crosshair, Eye, EyeOff, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { api } from "../lib/api.js";
 import { Toast } from "../components/Toast.jsx";
+import { MapModeBar } from "../components/MapModeBar.jsx";
 
 export function HereCheckPage() {
   const [coords, setCoords] = useState(null);
@@ -77,6 +78,7 @@ export function HereCheckPage() {
 
   return (
     <div className="page">
+      <div style={{ marginBottom: 16 }}><MapModeBar /></div>
       <div className="page-header">
         <div>
           <h1>Have I been here?</h1>

@@ -5,36 +5,28 @@ import {
   Bookmark,
   Plus,
   Link2,
-  Crosshair,
   Compass,
-  Footprints,
-  Sparkles,
-  History,
   Users,
   Sun,
   Moon,
   MoreHorizontal,
+  Home,
 } from "lucide-react";
 import { api } from "../lib/api.js";
 import { setPrefs } from "../lib/prefs.js";
 import { usePrefs } from "../lib/usePrefs.js";
 
-// Order matters: the first 5 are pinned to the bottom-tab bar on mobile.
-// The rest live in the "More" sheet on mobile and inline on desktop top nav.
+// Main nav — no map sub-features anymore. Walk / Plan / Walk history / Near me
+// all live inside the Map page as tabs (MapModeBar).
 const PRIMARY = [
-  { to: "/", end: true, label: "Map", icon: Map },
-  { to: "/walk", label: "Walk", icon: Footprints },
-  { to: "/plan", label: "Plan", icon: Sparkles },
+  { to: "/map", label: "Map", icon: Map },
   { to: "/places", label: "Places", icon: Bookmark },
   { to: "/groups", label: "Groups", icon: Users },
+  { to: "/import", label: "Import", icon: Link2 },
 ];
 const SECONDARY = [
-  { to: "/walks", label: "Walk history", icon: History },
-  { to: "/here", label: "Have I been here?", icon: Crosshair },
   { to: "/add", label: "Add place", icon: Plus },
-  { to: "/import", label: "Import link", icon: Link2 },
 ];
-const ALL = [...PRIMARY, ...SECONDARY];
 
 export function Nav() {
   const [healthy, setHealthy] = useState(null);
@@ -55,7 +47,6 @@ export function Nav() {
 
   return (
     <>
-      {/* Top nav — visible on desktop, slides up on mobile (replaced by bottom tabs). */}
       <header className="topnav">
         <NavLink to="/" end className="topnav-brand">
           <span className="brand-mark">
@@ -65,11 +56,20 @@ export function Nav() {
         </NavLink>
 
         <nav className="topnav-pills">
-          {ALL.map(({ to, end, label, icon: Icon }) => (
+          {PRIMARY.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
-              end={end}
+              className={({ isActive }) => "pill-link" + (isActive ? " active" : "")}
+            >
+              <Icon size={15} strokeWidth={2} />
+              <span>{label}</span>
+            </NavLink>
+          ))}
+          {SECONDARY.map(({ to, label, icon: Icon }) => (
+            <NavLink
+              key={to}
+              to={to}
               className={({ isActive }) => "pill-link" + (isActive ? " active" : "")}
             >
               <Icon size={15} strokeWidth={2} />
@@ -94,13 +94,16 @@ export function Nav() {
         </div>
       </header>
 
-      {/* Bottom tab bar — visible only on mobile. */}
+      {/* Bottom tab bar — mobile only. Exactly 5 thumb-reachable slots. */}
       <nav className="bottomnav" aria-label="Primary">
-        {PRIMARY.map(({ to, end, label, icon: Icon }) => (
+        <NavLink to="/" end className={({ isActive }) => "tab-link" + (isActive ? " active" : "")}>
+          <Home size={20} />
+          <span>Home</span>
+        </NavLink>
+        {PRIMARY.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
-            end={end}
             className={({ isActive }) => "tab-link" + (isActive ? " active" : "")}
           >
             <Icon size={20} strokeWidth={2} />
@@ -117,7 +120,6 @@ export function Nav() {
         </button>
       </nav>
 
-      {/* "More" sheet — secondary nav links + theme toggle on mobile. */}
       {moreOpen && (
         <div className="sheet-overlay" onClick={() => setMoreOpen(false)}>
           <div className="sheet" onClick={(e) => e.stopPropagation()}>
@@ -136,7 +138,7 @@ export function Nav() {
                 </NavLink>
               ))}
               <button
-                className="sheet-row sheet-row-button"
+                className="sheet-row"
                 onClick={() => { toggleTheme(); setMoreOpen(false); }}
               >
                 {prefs.theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}

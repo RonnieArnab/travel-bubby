@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Footprints, Play, Calendar, MapPin } from "lucide-react";
 import { api } from "../lib/api.js";
 import { WalksEmpty } from "../components/illustrations.jsx";
+import { MapModeBar } from "../components/MapModeBar.jsx";
 
 function fmtDuration(start, end) {
   if (!end) return "ongoing";
@@ -27,6 +28,7 @@ export function WalksPage() {
 
   return (
     <div className="page">
+      <div style={{ marginBottom: 16 }}><MapModeBar /></div>
       <div className="page-header">
         <div>
           <h1>Walks</h1>
