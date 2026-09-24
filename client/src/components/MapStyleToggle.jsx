@@ -14,6 +14,7 @@ export function MapStyleToggle() {
       {STYLES.map((s) => (
         <button
           key={s.key}
+          type="button"
           className={mapStyle === s.key ? "active" : ""}
           onClick={() => setPrefs({ mapStyle: s.key })}
           aria-pressed={mapStyle === s.key}

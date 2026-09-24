@@ -1739,14 +1739,103 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 13px;
+  gap: 16px;
+  flex-direction: column;
   background: var(--bg);
   color: var(--ink-2);
   font-size: 13px;
 }
 .loading-compass {
-  font-size: 30px;
+  font-size: 25px;
   color: var(--accent);
+}
+.loading-mark {
+  width: 68px;
+  height: 68px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  background: var(--accent-soft);
+  box-shadow: 0 0 0 12px color-mix(in srgb, var(--accent-soft) 55%, transparent);
+}
+.loading-orbit {
+  position: absolute;
+  inset: 8px;
+  border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  border-radius: 50%;
+  animation: loading-orbit 2.2s linear infinite;
+}
+.loading-orbit-two {
+  inset: 14px;
+  animation-direction: reverse;
+  animation-duration: 1.5s;
+  border-style: dashed;
+}
+@keyframes loading-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.loading-copy {
+  display: grid;
+  gap: 6px;
+  text-align: center;
+}
+.loading-copy strong {
+  color: var(--ink);
+  font-size: 18px;
+  letter-spacing: -0.03em;
+}
+.loading-copy strong span,
+.boot-screen strong span {
+  color: var(--accent-2);
+}
+.loading-copy small {
+  color: var(--ink-3);
+}
+.boot-screen {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 10px;
+  background: #f6f4ed;
+  color: #294f3b;
+  font:
+    14px/1.4 "DM Sans",
+    system-ui,
+    sans-serif;
+}
+.boot-screen strong {
+  font-size: 20px;
+  letter-spacing: -0.04em;
+}
+.boot-screen small {
+  color: #708075;
+}
+.boot-mark {
+  width: 58px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  background: #dfead9;
+  color: #294f3b;
+  font-size: 22px;
+  animation: boot-breathe 1.8s ease-in-out infinite;
+}
+@keyframes boot-breathe {
+  50% {
+    transform: translateY(-4px) scale(1.04);
+    box-shadow: 0 8px 24px #294f3b1c;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-orbit,
+  .boot-mark {
+    animation: none;
+  }
 }
 .map-panel .panel-head,
 .map-panel-footer,

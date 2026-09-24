@@ -28,6 +28,14 @@ const STAGES = {
   summarizing: "Turning the evidence into travel notes…",
   geocoding: "Finding the places on your map…",
 };
+const STAGE_ORDER = [
+  ["metadata", "Read the public link"],
+  ["download", "Collect the media"],
+  ["transcribing", "Listen for spoken places"],
+  ["screen_text", "Read signs and captions"],
+  ["summarizing", "Shape the travel notes"],
+  ["geocoding", "Place them on the map"],
+];
 const SOURCES = {
   provided_transcript: "Your pasted transcript",
   captions: "Video captions",
@@ -426,13 +434,36 @@ export function ImportLinkPage() {
       </div>
       {busy && (
         <div className="card import-progress" role="status" aria-live="polite">
-          <LoaderCircle size={22} className="import-spinner" />
-          <div>
+          <div className="progress-orb" aria-hidden="true">
+            <LoaderCircle size={25} className="import-spinner" />
+          </div>
+          <div className="import-progress-copy">
+            <div className="section-kicker">YOUR INSPIRATION IS ON ITS WAY</div>
             <strong>{STAGES[stage] || "Processing your link…"}</strong>
             <p className="muted">
-              Local transcription can take a few minutes. You can return to this
-              page while it works.
+              We keep the evidence small and reviewable. You can leave this tab
+              open while the link is being prepared.
             </p>
+            <ol className="import-stage-list">
+              {STAGE_ORDER.map(([key, label]) => {
+                const current = STAGE_ORDER.findIndex(
+                  ([name]) => name === stage,
+                );
+                const index = STAGE_ORDER.findIndex(([name]) => name === key);
+                const state =
+                  index < current
+                    ? "done"
+                    : index === current
+                      ? "active"
+                      : "waiting";
+                return (
+                  <li key={key} className={state}>
+                    <span>{state === "done" ? "✓" : index + 1}</span>
+                    {label}
+                  </li>
+                );
+              })}
+            </ol>
           </div>
         </div>
       )}
@@ -512,9 +543,10 @@ export function ImportLinkPage() {
             </div>
             {!data.extraction?.transcript_source && (
               <p className="import-notice">
-                The video’s speech wasn’t available. These results only use the
-                page text and any readable frames. Paste a transcript above to
-                include what was said.
+                The video’s speech wasn’t available on this deployment. These
+                results only use page text and readable frames. Paste a
+                transcript above, or configure the open-source media worker
+                described in VIDEO_IMPORT.md to include spoken context.
               </p>
             )}
             {!data.enabled && <p className="import-notice">{data.reason}</p>}

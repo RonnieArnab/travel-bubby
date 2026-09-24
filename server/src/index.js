@@ -51,7 +51,7 @@ if (existsSync(clientDist)) {
           res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
         }
       },
-    })
+    }),
   );
 
   // SPA fallback — any non-API GET that didn't match a static file gets
@@ -62,7 +62,9 @@ if (existsSync(clientDist)) {
     res.sendFile(resolve(clientDist, "index.html"));
   });
 } else {
-  log.warn("client/dist not found — serving API only", { expected_at: clientDist });
+  log.warn("client/dist not found — serving API only", {
+    expected_at: clientDist,
+  });
 }
 
 app.use((err, req, res, _next) => {
@@ -80,6 +82,7 @@ app.listen(port, () => {
     url: `http://localhost:${port}`,
     env: process.env.NODE_ENV || "development",
     log_level: process.env.LOG_LEVEL || "INFO",
-    summarizer: `local Ollama (${process.env.OLLAMA_MODEL || "qwen3:4b"})`,
+    summarizer: `${process.env.OLLAMA_URL ? "configured Ollama" : "local Ollama"} (${process.env.OLLAMA_MODEL || "qwen3:4b"})`,
+    media_worker: process.env.MEDIA_WORKER_URL ? "configured" : "local",
   });
 });

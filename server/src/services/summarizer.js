@@ -71,14 +71,23 @@ export function validateSummary(raw, evidence) {
           quotedText.includes(number),
         );
       // Prefer a missing address over a city borrowed from a different stop.
-      const normalized = text => text.toLowerCase().normalize("NFKC").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
-      const supportedAddress = value => {
-        const address = clean(value, 250), normalizedAddress = normalized(address);
+      const normalized = (text) =>
+        text
+          .toLowerCase()
+          .normalize("NFKC")
+          .replace(/[^\p{L}\p{N}]+/gu, " ")
+          .trim();
+      const supportedAddress = (value) => {
+        const address = clean(value, 250),
+          normalizedAddress = normalized(address);
         if (!normalizedAddress) return "";
         const quoted = normalized(quotedText);
-        const found = /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(address)
-          ? quoted.includes(normalizedAddress)
-          : ` ${quoted} `.includes(` ${normalizedAddress} `);
+        const found =
+          /[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}]/u.test(
+            address,
+          )
+            ? quoted.includes(normalizedAddress)
+            : ` ${quoted} `.includes(` ${normalizedAddress} `);
         return found ? address : "";
       };
       const confidence = ["high", "medium", "low"].includes(p.confidence)
@@ -119,21 +128,25 @@ export function validateSummary(raw, evidence) {
 }
 export function localModelConfig() {
   const base = new URL(process.env.OLLAMA_URL || "http://127.0.0.1:11434");
-  if (
-    !["localhost", "127.0.0.1", "[::1]"].includes(base.hostname) ||
-    base.protocol !== "http:" ||
-    base.username ||
-    base.password
-  )
+  const local = ["localhost", "127.0.0.1", "[::1]"].includes(base.hostname);
+  if ((!local && base.protocol !== "https:") || base.username || base.password)
     throw new Error(
-      "OLLAMA_URL must point to a local HTTP Ollama server. Cloud providers are disabled.",
+      "OLLAMA_URL must be a local HTTP Ollama server or an HTTPS URL for your own hosted Ollama instance. Cloud model providers are not used.",
     );
   const model = process.env.OLLAMA_MODEL || "qwen3:4b";
   if (/cloud|https?:|\//i.test(model))
     throw new Error(
       "Use a downloaded local Ollama model. Remote models are disabled.",
     );
-  return { url: new URL("/api/chat", base).href, model };
+  const headers = { "Content-Type": "application/json" };
+  if (process.env.OLLAMA_API_KEY)
+    headers.Authorization = `Bearer ${process.env.OLLAMA_API_KEY}`;
+  return {
+    url: new URL("/api/chat", base).href,
+    model,
+    remote: !local,
+    headers,
+  };
 }
 export async function summarizeScraped(scraped, evidence) {
   if (!evidence.items.length)
@@ -143,11 +156,11 @@ export async function summarizeScraped(scraped, evidence) {
         "No readable evidence was found. Paste the spoken transcript or add the place manually.",
       used_image: false,
     };
-  const { url, model } = localModelConfig();
+  const { url, model, remote, headers } = localModelConfig();
   try {
     const response = await fetch(url, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       signal: AbortSignal.timeout(120000),
       body: JSON.stringify({
         model,
@@ -170,7 +183,7 @@ export async function summarizeScraped(scraped, evidence) {
     });
     if (!response.ok)
       throw new Error(
-        `Local model returned HTTP ${response.status}. Ensure ${model} is installed in Ollama.`,
+        `${remote ? "Hosted" : "Local"} Ollama returned HTTP ${response.status}. Ensure ${model} is installed and available.`,
       );
     const data = await response.json();
     if (data.done_reason === "length")
@@ -201,7 +214,7 @@ export async function summarizeScraped(scraped, evidence) {
       provider: "ollama",
       reason:
         error.cause?.code === "ECONNREFUSED" || error.message === "fetch failed"
-          ? `Local summarizer is not running. Start Ollama and pull ${model}; your extracted evidence is still available below.`
+          ? `${remote ? "Hosted" : "Local"} summarizer is not running. ${remote ? "Check OLLAMA_URL and its network access, then make sure" : "Start Ollama and pull"} ${model}; your extracted evidence is still available below.`
           : error.message,
     };
   }

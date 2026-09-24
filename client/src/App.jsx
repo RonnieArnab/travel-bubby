@@ -1,6 +1,24 @@
 import { lazy, Suspense } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Nav } from "./components/Nav.jsx";
+
+function LoadingScreen() {
+  return (
+    <div className="page-loading" role="status" aria-live="polite">
+      <div className="loading-mark" aria-hidden="true">
+        <span className="loading-orbit loading-orbit-one" />
+        <span className="loading-orbit loading-orbit-two" />
+        <span className="loading-compass">✦</span>
+      </div>
+      <div className="loading-copy">
+        <strong>
+          travelbuddy<span>.</span>
+        </strong>
+        <small>Mapping your next little adventure…</small>
+      </div>
+    </div>
+  );
+}
 const LandingPage = lazy(() =>
   import("./pages/LandingPage.jsx").then((module) => ({
     default: module.LandingPage,
@@ -97,14 +115,7 @@ function ShellOrLanding() {
 
 export default function App() {
   return (
-    <Suspense
-      fallback={
-        <div className="page-loading" role="status">
-          <span className="loading-compass">✳</span> Finding your next
-          adventure…
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingScreen />}>
       <ShellOrLanding />
     </Suspense>
   );

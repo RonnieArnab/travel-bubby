@@ -4,14 +4,14 @@ Paste a public video link into **Import link**. Travel Buddy gathers text first,
 
 ## What runs where
 
-| Step | Open-source tool | Behavior |
-| --- | --- | --- |
-| Public media and subtitles | [yt-dlp](https://github.com/yt-dlp/yt-dlp) | Uses human captions first, then automatic captions. Supports public Instagram, YouTube, TikTok, Vimeo, Facebook, X and Dailymotion links where the platform permits access. |
-| Speech when captions are missing | [faster-whisper](https://github.com/SYSTRAN/faster-whisper) | Whisper `small`, CPU/int8, local multilingual transcription. No cloud speech API. |
-| Video frames | [FFmpeg](https://ffmpeg.org/) | Samples eight low-resolution frames from downloaded media. |
-| Text in frames | [Tesseract](https://github.com/tesseract-ocr/tesseract) | Reads signs and overlays locally. English OCR by default; install language packs for other scripts. |
-| Travel facts | [Ollama](https://docs.ollama.com/capabilities/structured-outputs) + [Qwen3 4B](https://ollama.com/library/qwen3:4b) | One structured, text-only request. Extracts up to eight named places, destination hints, notes, things to do, and source evidence. |
-| Repeat imports | SQLite | Separate caches for evidence and successful summaries. A summary cache hit uses zero model calls. |
+| Step                             | Open-source tool                                                                                                    | Behavior                                                                                                                                                                    |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Public media and subtitles       | [yt-dlp](https://github.com/yt-dlp/yt-dlp)                                                                          | Uses human captions first, then automatic captions. Supports public Instagram, YouTube, TikTok, Vimeo, Facebook, X and Dailymotion links where the platform permits access. |
+| Speech when captions are missing | [faster-whisper](https://github.com/SYSTRAN/faster-whisper)                                                         | Whisper `small`, CPU/int8, local multilingual transcription. No cloud speech API.                                                                                           |
+| Video frames                     | [FFmpeg](https://ffmpeg.org/)                                                                                       | Samples eight low-resolution frames from downloaded media.                                                                                                                  |
+| Text in frames                   | [Tesseract](https://github.com/tesseract-ocr/tesseract)                                                             | Reads signs and overlays locally. English OCR by default; install language packs for other scripts.                                                                         |
+| Travel facts                     | [Ollama](https://docs.ollama.com/capabilities/structured-outputs) + [Qwen3 4B](https://ollama.com/library/qwen3:4b) | One structured, text-only request. Extracts up to eight named places, destination hints, notes, things to do, and source evidence.                                          |
+| Repeat imports                   | SQLite                                                                                                              | Separate caches for evidence and successful summaries. A summary cache hit uses zero model calls.                                                                           |
 
 Whisper is itself a machine-learning model, but its inference runs locally. There are **no paid scraping, transcription, or LLM API calls** and no Gemini fallback. Local CPU/GPU time, disk space, electricity, and internet access are still required. The browser and extraction tools contact source platforms to retrieve media; summarization stays on your machine.
 
@@ -46,7 +46,39 @@ npm run dev:server
 npm run dev:client
 ```
 
-If you already run Ollama, stop that instance before using `ai:serve`, or configure it to disable cloud inference and use its own existing model store. The API permits only loopback Ollama URLs and rejects remote/cloud model names. No API key is needed. Requests fail visibly if the local model is unavailable; the extracted text remains available to review.
+If you already run Ollama, stop that instance before using `ai:serve`, or configure it to disable cloud inference and use its own existing model store. No API key is needed for a local server. Requests fail visibly if the model is unavailable; the extracted text remains available to review.
+
+## Production speech and summarization
+
+Render’s Node runtime does not include FFmpeg, yt-dlp, Tesseract, Whisper, or
+Ollama. That is why a deployed import can still show page text and frame
+evidence while reporting that speech and the summarizer are unavailable. The
+Render free tier also spins down after 15 minutes and is not a good place to
+run a Whisper model.
+
+Keep the web app on Render and run the open-source media worker on a machine
+with Python, FFmpeg, and faster-whisper. The repository includes the HTTP
+wrapper at `server/workers/media_server.py`:
+
+```bash
+cd server
+MEDIA_SETUP_PYTHON=python3 bash scripts/setup-media.sh
+.venv/bin/python workers/media_server.py
+```
+
+Set `MEDIA_WORKER_URL=https://your-worker.example/extract` on Render. Set the
+same random `MEDIA_WORKER_TOKEN` on both services. The worker downloads only
+the supported public link, limits clips to ten minutes and 40 MB, and returns
+timestamped Whisper/OCR evidence to the web app. No paid scraping API is
+required.
+
+For the structured summary, either keep Ollama on the same private machine as
+the worker or run it on a separate machine. Set `OLLAMA_URL=https://your-hosted-ollama.example`,
+`OLLAMA_MODEL=qwen3:4b`, and optionally `OLLAMA_API_KEY` on Render. The app
+accepts HTTPS for a self-hosted Ollama endpoint; it does not call a hosted
+model provider or upload to an OpenAI-compatible API. If these variables are
+not set, pasted transcripts and page/frame evidence still work and are saved
+for later reprocessing.
 
 ## Keeping compute small
 
@@ -86,17 +118,20 @@ This is a local application. Its existing API has no account authentication; do 
 
 These are shell environment variables (the app does not automatically load `.env`):
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `MEDIA_PYTHON` | `server/.venv/bin/python`, otherwise `python3` | Worker interpreter |
-| `WHISPER_MODEL` | `small` | Local speech model; download through setup after changing |
-| `WHISPER_CACHE_DIR` | `server/data/whisper` | Speech model storage |
-| `WHISPER_ALLOW_DOWNLOAD` | `0` | Keep model downloads out of import requests; setup downloads explicitly |
-| `OCR_LANGUAGES` | `eng` | Tesseract language codes, e.g. `eng+jpn` after installing packs |
-| `OLLAMA_URL` | `http://127.0.0.1:11434` | Loopback-only model server |
-| `OLLAMA_MODEL` | `qwen3:4b` | Installed local model with structured-output support |
-| `OLLAMA_MODELS` | `server/data/models` with `ai:serve` | Ollama model storage |
-| `PHOTON_URL` | `https://photon.komoot.io/api/` | Configurable public or self-hosted geocoder |
+| Variable                 | Default                                        | Purpose                                                                 |
+| ------------------------ | ---------------------------------------------- | ----------------------------------------------------------------------- |
+| `MEDIA_PYTHON`           | `server/.venv/bin/python`, otherwise `python3` | Worker interpreter                                                      |
+| `WHISPER_MODEL`          | `small`                                        | Local speech model; download through setup after changing               |
+| `WHISPER_CACHE_DIR`      | `server/data/whisper`                          | Speech model storage                                                    |
+| `WHISPER_ALLOW_DOWNLOAD` | `0`                                            | Keep model downloads out of import requests; setup downloads explicitly |
+| `OCR_LANGUAGES`          | `eng`                                          | Tesseract language codes, e.g. `eng+jpn` after installing packs         |
+| `OLLAMA_URL`             | `http://127.0.0.1:11434`                       | Local Ollama or HTTPS URL for your own hosted Ollama                    |
+| `OLLAMA_MODEL`           | `qwen3:4b`                                     | Installed local model with structured-output support                    |
+| `OLLAMA_API_KEY`         | empty                                          | Optional bearer token for a self-hosted HTTPS Ollama endpoint           |
+| `OLLAMA_MODELS`          | `server/data/models` with `ai:serve`           | Ollama model storage                                                    |
+| `MEDIA_WORKER_URL`       | empty                                          | Optional HTTPS endpoint running `server/workers/media_server.py`        |
+| `MEDIA_WORKER_TOKEN`     | empty                                          | Optional shared bearer token for the media worker                       |
+| `PHOTON_URL`             | `https://photon.komoot.io/api/`                | Configurable public or self-hosted geocoder                             |
 
 ## API and checks
 

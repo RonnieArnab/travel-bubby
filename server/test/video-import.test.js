@@ -208,7 +208,7 @@ test("local model makes one bounded text request and never falls back to a paid 
     assert.throws(localModelConfig);
     process.env.OLLAMA_MODEL = "qwen3:4b";
     process.env.OLLAMA_URL = "https://api.example.com";
-    assert.throws(localModelConfig);
+    assert.equal(localModelConfig().remote, true);
   } finally {
     await new Promise((r) => server.close(r));
     if (previousUrl === undefined) delete process.env.OLLAMA_URL;

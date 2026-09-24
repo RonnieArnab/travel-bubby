@@ -14,10 +14,47 @@ const localPython = fileURLToPath(
 const whisperCache = fileURLToPath(
   new URL("../../data/whisper", import.meta.url),
 );
+
+async function extractWithWorker(
+  url,
+  { readScreen = true, language = "auto", onProgress = () => {} } = {},
+) {
+  const endpoint = new URL(process.env.MEDIA_WORKER_URL);
+  if (endpoint.protocol !== "https:" && process.env.NODE_ENV === "production")
+    throw new Error("MEDIA_WORKER_URL must use HTTPS in production.");
+  onProgress("download");
+  const response = await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(process.env.MEDIA_WORKER_TOKEN
+        ? { Authorization: `Bearer ${process.env.MEDIA_WORKER_TOKEN}` }
+        : {}),
+    },
+    body: JSON.stringify({ url, readScreen, language }),
+    signal: AbortSignal.timeout(260000),
+  });
+  let body = null;
+  try {
+    body = await response.json();
+  } catch {}
+  if (!response.ok)
+    throw new Error(
+      body?.message || `Media worker returned HTTP ${response.status}.`,
+    );
+  const result = body?.result || body;
+  if (!result || !Array.isArray(result.transcript))
+    throw new Error("Media worker returned an invalid extraction.");
+  if (result.transcript_source) onProgress("summarizing");
+  return result;
+}
+
 export async function extractMedia(
   url,
   { readScreen = true, language = "auto", onProgress = () => {} } = {},
 ) {
+  if (process.env.MEDIA_WORKER_URL)
+    return extractWithWorker(url, { readScreen, language, onProgress });
   const directory = await mkdtemp(join(tmpdir(), "travel-media-"));
   try {
     return await new Promise((resolve, reject) => {
