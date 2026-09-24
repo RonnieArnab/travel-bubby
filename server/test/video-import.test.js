@@ -10,6 +10,7 @@ import {
   validateSummary,
   summarizeScraped,
   localModelConfig,
+  parseStructuredContent,
 } from "../src/services/summarizer.js";
 import { detectSource } from "../src/services/extractor.js";
 
@@ -22,6 +23,16 @@ const { db } = await import("../src/db/index.js");
 test.after(async () => {
   db.close();
   await rm(directory, { recursive: true, force: true });
+});
+
+test("structured model output accepts fenced JSON and reasoning wrappers", () => {
+  assert.deepEqual(parseStructuredContent('```json\n{"places":[]}\n```'), {
+    places: [],
+  });
+  assert.deepEqual(
+    parseStructuredContent('<think>Checking the evidence.</think> {"places":[]}'),
+    { places: [] },
+  );
 });
 
 test("public imports reject private, disguised, credential and non-web links", () => {

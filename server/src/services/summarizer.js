@@ -148,6 +148,34 @@ export function localModelConfig() {
     headers,
   };
 }
+
+// Ollama models sometimes return the requested schema inside a Markdown
+// fence, or leave a short reasoning prefix before the JSON object. Accept
+// those presentation wrappers while still validating the parsed object
+// against SUMMARY_SCHEMA through validateSummary below.
+export function parseStructuredContent(content) {
+  if (content && typeof content === "object") return content;
+  if (typeof content !== "string" || !content.trim())
+    throw new Error("The model returned an empty summary.");
+  const withoutReasoning = content
+    .replace(/<think>[\s\S]*?<\/think>/gi, "")
+    .trim();
+  const fenced = withoutReasoning.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  const candidate = (fenced?.[1] || withoutReasoning).trim();
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    const start = candidate.indexOf("{");
+    const end = candidate.lastIndexOf("}");
+    if (start >= 0 && end > start) {
+      try {
+        return JSON.parse(candidate.slice(start, end + 1));
+      } catch {}
+    }
+    throw new Error("The model returned invalid structured JSON.");
+  }
+}
+
 export async function summarizeScraped(scraped, evidence) {
   if (!evidence.items.length)
     return {
@@ -191,7 +219,7 @@ export async function summarizeScraped(scraped, evidence) {
         "The local summary hit its output limit. Review the transcript or try a shorter clip.",
       );
     const summary = validateSummary(
-      JSON.parse(data.message?.content || "null"),
+      parseStructuredContent(data.message?.content),
       evidence,
     );
     return {
