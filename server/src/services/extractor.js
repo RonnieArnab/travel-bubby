@@ -4,44 +4,22 @@
 //  - Instagram: pull caption / og:title / og:description from public OG tags.
 //  - Anything else: read OG tags so the user at least gets a title back.
 
+import { fetchPublicText, parsePublicUrl } from "./publicUrl.js";
 import { logger } from "../lib/log.js";
 
 const log = logger("extract");
-
-const UA =
-  "Mozilla/5.0 (compatible; TravelBuddy/0.1; +https://example.com/bot)";
-
-async function fetchHtml(url) {
-  const t0 = Date.now();
-  try {
-    const res = await fetch(url, {
-      headers: { "User-Agent": UA, Accept: "text/html,*/*" },
-      redirect: "follow",
-    });
-    if (!res.ok) {
-      log.warn("fetch non-2xx", { url, status: res.status, ms: Date.now() - t0 });
-      throw new Error(`Fetch failed: ${res.status}`);
-    }
-    const html = await res.text();
-    log.debug("fetched", { url, final: res.url, bytes: html.length, ms: Date.now() - t0 });
-    return { html, finalUrl: res.url };
-  } catch (err) {
-    log.warn("fetch error", { url, reason: err.message, ms: Date.now() - t0 });
-    throw err;
-  }
-}
 
 function pickMeta(html, names) {
   for (const name of names) {
     const re = new RegExp(
       `<meta[^>]+(?:property|name)=["']${name}["'][^>]+content=["']([^"']+)["']`,
-      "i"
+      "i",
     );
     const m = html.match(re);
     if (m) return decodeEntities(m[1]);
     const re2 = new RegExp(
       `<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${name}["']`,
-      "i"
+      "i",
     );
     const m2 = html.match(re2);
     if (m2) return decodeEntities(m2[1]);
@@ -76,28 +54,39 @@ function extractCoordsFromHtml(html) {
   return null;
 }
 
-function detectSource(url) {
-  const u = url.toLowerCase();
-  if (u.includes("instagram.com")) return "instagram";
-  if (u.includes("google.com/maps") || u.includes("goo.gl/maps") || u.includes("maps.app.goo.gl"))
+export function detectSource(url) {
+  const host = new URL(url).hostname.replace(/^www\./, "").toLowerCase();
+  const belongs = (domain) => host === domain || host.endsWith("." + domain);
+  if (belongs("instagram.com")) return "instagram";
+  if (belongs("youtube.com") || host === "youtu.be") return "youtube";
+  if (belongs("tiktok.com")) return "tiktok";
+  if (belongs("vimeo.com")) return "vimeo";
+  if (belongs("facebook.com") || host === "fb.watch") return "facebook";
+  if (belongs("dailymotion.com") || host === "dai.ly") return "dailymotion";
+  if (belongs("x.com") || belongs("twitter.com")) return "twitter";
+  if (
+    host === "maps.app.goo.gl" ||
+    host === "goo.gl" ||
+    (belongs("google.com") && new URL(url).pathname.startsWith("/maps"))
+  )
     return "google_maps";
-  if (u.includes("wa.me") || u.includes("whatsapp.com")) return "whatsapp";
   return "web";
 }
 
 export async function extractFromUrl(rawUrl) {
-  const url = rawUrl.trim();
+  const url = parsePublicUrl(rawUrl.trim()).href;
   const source = detectSource(url);
   log.info("extract start", { source, url });
 
   let html = "";
   let finalUrl = url;
+  const warnings = [];
   try {
-    const r = await fetchHtml(url);
+    const r = await fetchPublicText(url);
     html = r.html;
     finalUrl = r.finalUrl;
-  } catch {
-    // Fall through with what we have.
+  } catch (err) {
+    warnings.push(err.message);
   }
 
   const title =
@@ -117,6 +106,7 @@ export async function extractFromUrl(rawUrl) {
 
   const result = {
     source,
+    warnings,
     sourceUrl: finalUrl || url,
     name: title?.trim() || null,
     notes: description?.trim() || null,

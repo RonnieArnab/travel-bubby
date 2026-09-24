@@ -9,6 +9,7 @@ import { extractRouter } from "./routes/extract.js";
 import { walksRouter } from "./routes/walks.js";
 import { groupsRouter } from "./routes/groups.js";
 import { tripsRouter } from "./routes/trips.js";
+import { reelsRouter } from "./routes/reels.js";
 import { httpLogger, logger } from "./lib/log.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -28,6 +29,7 @@ app.use("/api/extract", extractRouter);
 app.use("/api/walks", walksRouter);
 app.use("/api/groups", groupsRouter);
 app.use("/api/trips", tripsRouter);
+app.use("/api/reels", reelsRouter);
 
 // In production, serve the built React app from ../../client/dist. The build
 // step (run on the deploy host) produces that directory; if it doesn't exist
@@ -78,8 +80,6 @@ app.listen(port, () => {
     url: `http://localhost:${port}`,
     env: process.env.NODE_ENV || "development",
     log_level: process.env.LOG_LEVEL || "INFO",
-    gemini: process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY
-      ? "configured"
-      : "missing",
+    summarizer: `local Ollama (${process.env.OLLAMA_MODEL || "qwen3:4b"})`,
   });
 });

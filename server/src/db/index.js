@@ -122,3 +122,20 @@ if (!placesCols.some((c) => c.name === "trip_id")) {
 if (!placesCols.some((c) => c.name === "added_by")) {
   db.exec("ALTER TABLE places ADD COLUMN added_by TEXT");
 }
+
+// Preserve optional place photography alongside the saved link.
+if (!placesCols.some((c) => c.name === "image_url")) {
+  db.exec("ALTER TABLE places ADD COLUMN image_url TEXT");
+}
+
+db.exec(`CREATE TABLE IF NOT EXISTS reel_collections (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  source_url TEXT NOT NULL UNIQUE,
+  created_at INTEGER NOT NULL DEFAULT (strftime('%s','now') * 1000)
+)`);
+if (!placesCols.some(c => c.name === "collection_id")) db.exec("ALTER TABLE places ADD COLUMN collection_id INTEGER REFERENCES reel_collections(id) ON DELETE SET NULL");
+if (!placesCols.some(c => c.name === "import_key")) db.exec("ALTER TABLE places ADD COLUMN import_key TEXT");
+if (!placesCols.some(c => c.name === "geocode_source")) db.exec("ALTER TABLE places ADD COLUMN geocode_source TEXT");
+if (!placesCols.some(c => c.name === "osm_url")) db.exec("ALTER TABLE places ADD COLUMN osm_url TEXT");
+db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_places_reel_item ON places(collection_id, import_key) WHERE collection_id IS NOT NULL AND import_key IS NOT NULL");

@@ -9,145 +9,125 @@ import {
   Users,
   Sun,
   Moon,
-  MoreHorizontal,
-  Home,
+  ArrowUpRight,
+  Footprints,
 } from "lucide-react";
 import { api } from "../lib/api.js";
 import { setPrefs } from "../lib/prefs.js";
 import { usePrefs } from "../lib/usePrefs.js";
 
-// Main nav — no map sub-features anymore. Walk / Plan / Walk history / Near me
-// all live inside the Map page as tabs (MapModeBar).
 const PRIMARY = [
-  { to: "/map", label: "Map", icon: Map },
-  { to: "/places", label: "Places", icon: Bookmark },
-  { to: "/groups", label: "Groups", icon: Users },
-  { to: "/import", label: "Import", icon: Link2 },
+  { to: "/places", label: "Your collections", icon: Bookmark },
+  { to: "/map", label: "Explore the map", icon: Map },
+  { to: "/groups", label: "Your travel crew", icon: Users },
+  { to: "/import", label: "Save a link", icon: Link2 },
+  { to: "/add", label: "Add a place", icon: Plus },
 ];
-const SECONDARY = [
-  { to: "/add", label: "Add place", icon: Plus },
-];
-
 export function Nav() {
   const [healthy, setHealthy] = useState(null);
-  const [moreOpen, setMoreOpen] = useState(false);
   const prefs = usePrefs();
-
   useEffect(() => {
     let alive = true;
-    api.health()
+    api
+      .health()
       .then(() => alive && setHealthy(true))
       .catch(() => alive && setHealthy(false));
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, []);
-
-  function toggleTheme() {
+  const toggleTheme = () =>
     setPrefs({ theme: prefs.theme === "dark" ? "light" : "dark" });
-  }
-
   return (
     <>
       <header className="topnav">
         <NavLink to="/" end className="topnav-brand">
           <span className="brand-mark">
-            <Compass size={18} strokeWidth={2.5} />
+            <Compass size={23} />
           </span>
-          <span className="brand-text">Travel<span className="accent">Buddy</span></span>
+          <span className="brand-text">
+            travel<span className="brand-light">buddy</span>
+            <b>.</b>
+          </span>
         </NavLink>
-
-        <nav className="topnav-pills">
+        <div className="sidebar-intro">A little curiosity goes a long way.</div>
+        <div className="sidebar-label">YOUR NEXT CHAPTER</div>
+        <nav className="topnav-pills" aria-label="Primary navigation">
           {PRIMARY.map(({ to, label, icon: Icon }) => (
             <NavLink
               key={to}
               to={to}
-              className={({ isActive }) => "pill-link" + (isActive ? " active" : "")}
+              className={({ isActive }) =>
+                "pill-link" + (isActive ? " active" : "")
+              }
             >
-              <Icon size={15} strokeWidth={2} />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-          {SECONDARY.map(({ to, label, icon: Icon }) => (
-            <NavLink
-              key={to}
-              to={to}
-              className={({ isActive }) => "pill-link" + (isActive ? " active" : "")}
-            >
-              <Icon size={15} strokeWidth={2} />
+              <Icon size={18} strokeWidth={1.7} />
               <span>{label}</span>
             </NavLink>
           ))}
         </nav>
-
+        <div className="sidebar-bottom">
+          <div className="sidebar-inspiration">
+            <img src="/assets/kyoto.jpg" alt="Kyoto's traditional streets" />
+            <span>
+              Good things happen
+              <br />
+              <em>off the beaten path.</em>
+            </span>
+            <NavLink to="/map?destination=japan">
+              A little inspiration <ArrowUpRight size={14} />
+            </NavLink>
+          </div>
+          <NavLink to="/map?mode=walk" className="sidebar-walk">
+            <Footprints size={17} /> Go for a wander <ArrowUpRight size={14} />
+          </NavLink>
+        </div>
         <div className="topnav-tail">
+          <span
+            className={`health-pill ${healthy === true ? "ok" : healthy === false ? "warn" : ""}`}
+          >
+            <span className="dot" />
+            <span>
+              {healthy === null
+                ? "Connecting"
+                : healthy
+                  ? "Ready to explore"
+                  : "Server offline"}
+            </span>
+          </span>
           <button
             className="ghost icon-only theme-toggle"
             onClick={toggleTheme}
-            title={`Switch to ${prefs.theme === "dark" ? "light" : "dark"} mode`}
-            aria-label="Toggle theme"
+            aria-label={`Switch to ${prefs.theme === "dark" ? "light" : "dark"} mode`}
           >
-            {prefs.theme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
+            {prefs.theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
           </button>
-          <span className={`health-pill ${healthy === true ? "ok" : healthy === false ? "warn" : ""}`}>
-            <span className="dot" />
-            <span>{healthy === null ? "…" : healthy ? "online" : "offline"}</span>
-          </span>
         </div>
       </header>
-
-      {/* Bottom tab bar — mobile only. Exactly 5 thumb-reachable slots. */}
-      <nav className="bottomnav" aria-label="Primary">
-        <NavLink to="/" end className={({ isActive }) => "tab-link" + (isActive ? " active" : "")}>
-          <Home size={20} />
-          <span>Home</span>
-        </NavLink>
+      <nav className="bottomnav" aria-label="Mobile navigation">
         {PRIMARY.map(({ to, label, icon: Icon }) => (
           <NavLink
             key={to}
             to={to}
-            className={({ isActive }) => "tab-link" + (isActive ? " active" : "")}
+            className={({ isActive }) =>
+              "tab-link" + (isActive ? " active" : "")
+            }
           >
-            <Icon size={20} strokeWidth={2} />
-            <span>{label}</span>
+            <Icon size={20} />
+            <span>
+              {
+                {
+                  "Your collections": "Saved",
+                  "Explore the map": "Map",
+                  "Your travel crew": "Crew",
+                  "Save a link": "Save link",
+                  "Add a place": "Add place",
+                }[label]
+              }
+            </span>
           </NavLink>
         ))}
-        <button
-          className="tab-link"
-          onClick={() => setMoreOpen(true)}
-          aria-label="More"
-        >
-          <MoreHorizontal size={20} />
-          <span>More</span>
-        </button>
       </nav>
-
-      {moreOpen && (
-        <div className="sheet-overlay" onClick={() => setMoreOpen(false)}>
-          <div className="sheet" onClick={(e) => e.stopPropagation()}>
-            <div className="sheet-handle" />
-            <div className="sheet-title">More</div>
-            <div className="sheet-list">
-              {SECONDARY.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  className="sheet-row"
-                  onClick={() => setMoreOpen(false)}
-                >
-                  <Icon size={18} />
-                  <span>{label}</span>
-                </NavLink>
-              ))}
-              <button
-                className="sheet-row"
-                onClick={() => { toggleTheme(); setMoreOpen(false); }}
-              >
-                {prefs.theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
-                <span>{prefs.theme === "dark" ? "Light mode" : "Dark mode"}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }

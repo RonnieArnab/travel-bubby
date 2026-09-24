@@ -2,9 +2,9 @@ import { setPrefs } from "../lib/prefs.js";
 import { usePrefs } from "../lib/usePrefs.js";
 
 const STYLES = [
-  { key: "light", label: "Light" },
+  { key: "light", label: "Explore" },
   { key: "dark", label: "Dark" },
-  { key: "satellite", label: "Sat" },
+  { key: "satellite", label: "Satellite" },
 ];
 
 export function MapStyleToggle() {

@@ -7,7 +7,9 @@ async function request(path, options = {}) {
   });
   if (!res.ok) {
     let body = null;
-    try { body = await res.json(); } catch {}
+    try {
+      body = await res.json();
+    } catch {}
     const msg = body?.message || body?.error || res.statusText;
     throw new Error(msg);
   }
@@ -16,6 +18,10 @@ async function request(path, options = {}) {
 }
 
 export const api = {
+  searchLocation: (data) =>
+    request("/reels/search", { method: "POST", body: JSON.stringify(data) }),
+  saveReel: (data) =>
+    request("/reels/save", { method: "POST", body: JSON.stringify(data) }),
   health: () => request("/health"),
   listPlaces: () => request("/places"),
   getPlace: (id) => request(`/places/${id}`),
@@ -38,7 +44,13 @@ export const api = {
   extract: (url) =>
     request("/extract", { method: "POST", body: JSON.stringify({ url }) }),
   summarize: (url) =>
-    request("/extract/summarize", { method: "POST", body: JSON.stringify({ url }) }),
+    request("/extract/summarize", {
+      method: "POST",
+      body: JSON.stringify({ url }),
+    }),
+  startImport: (data) =>
+    request("/extract/jobs", { method: "POST", body: JSON.stringify(data) }),
+  getImport: (id, signal) => request(`/extract/jobs/${id}`, { signal }),
 
   // Walks — tracked outings. Start a walk, append GPS breadcrumbs, end it.
   // The server auto-marks places visited when the user passes within radius.
@@ -64,13 +76,19 @@ export const api = {
     request("/groups", { method: "POST", body: JSON.stringify(data) }),
   getGroup: (token) => request(`/groups/${token}`),
   joinGroup: (token, name) =>
-    request(`/groups/${token}/join`, { method: "POST", body: JSON.stringify({ name }) }),
+    request(`/groups/${token}/join`, {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }),
   createTrip: (data) =>
     request("/trips", { method: "POST", body: JSON.stringify(data) }),
   getTrip: (id) => request(`/trips/${id}`),
   deleteTrip: (id) => request(`/trips/${id}`, { method: "DELETE" }),
   addGuide: (tripId, data) =>
-    request(`/trips/${tripId}/guides`, { method: "POST", body: JSON.stringify(data) }),
+    request(`/trips/${tripId}/guides`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
   deleteGuide: (guideId) =>
     request(`/trips/guides/${guideId}`, { method: "DELETE" }),
 

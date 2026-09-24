@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import { ChevronLeft, Plus, Trash2, MapPin, BookOpen, Link2 } from "lucide-react";
+import {
+  ChevronLeft,
+  Plus,
+  Trash2,
+  MapPin,
+  BookOpen,
+  Link2,
+} from "lucide-react";
 import { api } from "../lib/api.js";
 import { usePrefs } from "../lib/usePrefs.js";
 import { tileForStyle, modernPin } from "../lib/leafletIcon.js";
@@ -19,9 +26,15 @@ export function TripDetailPage() {
   const tile = tileForStyle(prefs.mapStyle);
 
   async function load() {
-    try { setTrip(await api.getTrip(id)); } catch (e) { setError(e.message); }
+    try {
+      setTrip(await api.getTrip(id));
+    } catch (e) {
+      setError(e.message);
+    }
   }
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [id]);
+  useEffect(() => {
+    load(); /* eslint-disable-next-line */
+  }, [id]);
 
   async function addGuide(e) {
     e.preventDefault();
@@ -38,7 +51,9 @@ export function TripDetailPage() {
       await load();
     } catch (err) {
       setToast({ kind: "warn", title: "Add guide failed", body: err.message });
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function removeGuide(g) {
@@ -60,6 +75,7 @@ export function TripDetailPage() {
         lng: data.lng,
         source: data.source,
         source_url: data.sourceUrl,
+        image_url: data.image || null,
         trip_id: trip.id,
         added_by: prefs.displayName || null,
       });
@@ -67,43 +83,74 @@ export function TripDetailPage() {
       await load();
     } catch (err) {
       setToast({ kind: "warn", title: "Add failed", body: err.message });
-    } finally { setBusy(false); }
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (error) {
     return (
       <div className="page">
-        <Link to="/groups" className="muted" style={{ display: "inline-flex", gap: 4, alignItems: "center", textDecoration: "none" }}>
+        <Link
+          to="/groups"
+          className="muted"
+          style={{
+            display: "inline-flex",
+            gap: 4,
+            alignItems: "center",
+            textDecoration: "none",
+          }}
+        >
           <ChevronLeft size={14} /> Groups
         </Link>
-        <div className="empty"><h3>Couldn't load trip</h3><p>{error}</p></div>
+        <div className="empty">
+          <h3>Couldn't load trip</h3>
+          <p>{error}</p>
+        </div>
       </div>
     );
   }
   if (!trip) {
     return (
       <div className="page">
-        <div className="skeleton" style={{ height: 28, width: 200, marginBottom: 16 }} />
+        <div
+          className="skeleton"
+          style={{ height: 28, width: 200, marginBottom: 16 }}
+        />
         <div className="skeleton" style={{ height: 360, width: "100%" }} />
       </div>
     );
   }
 
-  const placesWithCoords = (trip.places ?? []).filter((p) => p.lat != null && p.lng != null);
+  const placesWithCoords = (trip.places ?? []).filter(
+    (p) => p.lat != null && p.lng != null,
+  );
   const center = placesWithCoords[0]
     ? [placesWithCoords[0].lat, placesWithCoords[0].lng]
     : [20.5937, 78.9629];
 
   return (
     <div className="page">
-      <Link to={trip.group_token ? `/groups/${trip.group_token}` : "/groups"} className="muted" style={{ display: "inline-flex", gap: 4, alignItems: "center", textDecoration: "none", marginBottom: 6 }}>
+      <Link
+        to={trip.group_token ? `/groups/${trip.group_token}` : "/groups"}
+        className="muted"
+        style={{
+          display: "inline-flex",
+          gap: 4,
+          alignItems: "center",
+          textDecoration: "none",
+          marginBottom: 6,
+        }}
+      >
         <ChevronLeft size={14} /> {trip.group_name || "Group"}
       </Link>
       <div className="page-header">
         <div>
+          <div className="section-kicker">THE PLAN IS COMING TOGETHER</div>
           <h1>{trip.name}</h1>
           <p className="subtitle">
-            {trip.location ? `${trip.location} · ` : ""}{trip.places.length} places · {trip.guides.length} guides
+            {trip.location ? `${trip.location} · ` : ""}
+            {trip.places.length} places · {trip.guides.length} guides
           </p>
         </div>
         <button onClick={addPlaceFromUrl} disabled={busy}>
@@ -111,17 +158,52 @@ export function TripDetailPage() {
         </button>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 16 }}>
+      <div className="detail-layout">
         <div className="col">
-          <div className="card" style={{ padding: 0, overflow: "hidden", height: 320 }}>
-            <MapContainer center={center} zoom={placesWithCoords.length ? 13 : 4} scrollWheelZoom style={{ height: "100%" }}>
-              <TileLayer url={tile.url} attribution={tile.attribution} subdomains={tile.subdomains} />
+          <div
+            className="card"
+            style={{ padding: 0, overflow: "hidden", height: 320 }}
+          >
+            <MapContainer
+              center={center}
+              zoom={placesWithCoords.length ? 13 : 4}
+              scrollWheelZoom
+              style={{ height: "100%" }}
+            >
+              <TileLayer
+                key={prefs.mapStyle}
+                url={tile.url}
+                attribution={tile.attribution}
+                subdomains={tile.subdomains}
+                className={tile.className || ""}
+              />
               {placesWithCoords.map((p) => (
-                <Marker key={p.id} position={[p.lat, p.lng]} icon={modernPin((p.visit_count ?? 0) > 0 ? "visited" : "unvisited")}>
+                <Marker
+                  key={p.id}
+                  position={[p.lat, p.lng]}
+                  icon={modernPin(
+                    (p.visit_count ?? 0) > 0 ? "visited" : "unvisited",
+                  )}
+                >
                   <Popup>
                     <div style={{ minWidth: 180 }}>
+                      {p.image_url && (
+                        <img
+                          className="popup-photo"
+                          src={p.image_url}
+                          alt={p.name}
+                          loading="lazy"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      )}
                       <div style={{ fontWeight: 700 }}>{p.name}</div>
-                      {p.added_by && <div className="faint" style={{ marginTop: 4 }}>Added by {p.added_by}</div>}
+                      {p.added_by && (
+                        <div className="faint" style={{ marginTop: 4 }}>
+                          Added by {p.added_by}
+                        </div>
+                      )}
                     </div>
                   </Popup>
                 </Marker>
@@ -131,23 +213,57 @@ export function TripDetailPage() {
 
           <div className="section-label">Places</div>
           {trip.places.length === 0 ? (
-            <div className="card muted">No places yet. Use "Add place from link" above to import an Instagram reel, Maps URL, or any web link.</div>
+            <div className="card muted">
+              No places yet. Use "Add place from link" above to import an
+              Instagram reel, Maps URL, or any web link.
+            </div>
           ) : (
             <div className="col" style={{ gap: 8 }}>
               {trip.places.map((p) => (
                 <div key={p.id} className="card" style={{ padding: 14 }}>
+                  {p.image_url && (
+                    <img
+                      className="trip-place-photo"
+                      src={p.image_url}
+                      alt={p.name}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  )}
                   <div className="card-title-row">
                     <h3 style={{ fontSize: 16 }}>{p.name}</h3>
-                    <span className={`badge ${(p.visit_count ?? 0) > 0 ? "visited" : "unvisited"}`}>
-                      {(p.visit_count ?? 0) > 0 ? `visited ${p.visit_count}×` : "new"}
+                    <span
+                      className={`badge ${(p.visit_count ?? 0) > 0 ? "visited" : "unvisited"}`}
+                    >
+                      {(p.visit_count ?? 0) > 0
+                        ? `visited ${p.visit_count}×`
+                        : "new"}
                     </span>
                   </div>
-                  {p.notes && <div className="muted">{p.notes.length > 200 ? p.notes.slice(0, 200) + "…" : p.notes}</div>}
-                  <div className="faint" style={{ marginTop: 6, display: "flex", gap: 12 }}>
+                  {p.notes && (
+                    <div className="muted">
+                      {p.notes.length > 200
+                        ? p.notes.slice(0, 200) + "…"
+                        : p.notes}
+                    </div>
+                  )}
+                  <div
+                    className="faint"
+                    style={{ marginTop: 6, display: "flex", gap: 12 }}
+                  >
                     {p.category && <span>{p.category}</span>}
                     {p.added_by && <span>· added by {p.added_by}</span>}
                     {p.source_url && (
-                      <a href={p.source_url} target="_blank" rel="noreferrer" className="faint">source</a>
+                      <a
+                        href={p.source_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="faint"
+                      >
+                        source
+                      </a>
                     )}
                   </div>
                 </div>
@@ -162,7 +278,8 @@ export function TripDetailPage() {
               <BookOpen size={16} /> Add a guide
             </h3>
             <div className="muted" style={{ marginTop: -4 }}>
-              Tips, etiquette, must-tries, transit hacks — anything other members should know.
+              Tips, etiquette, must-tries, transit hacks — anything other
+              members should know.
             </div>
             <div>
               <label>Title</label>
@@ -192,15 +309,35 @@ export function TripDetailPage() {
             <div className="col" style={{ gap: 10 }}>
               {trip.guides.map((g) => (
                 <div className="card" key={g.id} style={{ padding: 14 }}>
+                  {p.image_url && (
+                    <img
+                      className="trip-place-photo"
+                      src={p.image_url}
+                      alt={p.name}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.style.display = "none";
+                      }}
+                    />
+                  )}
                   <div className="card-title-row">
                     <h3 style={{ fontSize: 16 }}>{g.title}</h3>
-                    <button className="ghost sm" onClick={() => removeGuide(g)} aria-label="Delete">
+                    <button
+                      className="ghost sm"
+                      onClick={() => removeGuide(g)}
+                      aria-label="Delete"
+                    >
                       <Trash2 size={14} />
                     </button>
                   </div>
-                  {g.body && <div className="muted" style={{ whiteSpace: "pre-wrap" }}>{g.body}</div>}
+                  {g.body && (
+                    <div className="muted" style={{ whiteSpace: "pre-wrap" }}>
+                      {g.body}
+                    </div>
+                  )}
                   <div className="faint" style={{ marginTop: 6 }}>
-                    {g.author_name ? `by ${g.author_name} · ` : ""}{new Date(g.created_at).toLocaleString()}
+                    {g.author_name ? `by ${g.author_name} · ` : ""}
+                    {new Date(g.created_at).toLocaleString()}
                   </div>
                 </div>
               ))}

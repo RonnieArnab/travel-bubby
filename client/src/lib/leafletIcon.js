@@ -1,22 +1,22 @@
 import L from "leaflet";
 
-const iconBase = "https://unpkg.com/leaflet@1.9.4/dist/images";
+import markerIcon from "leaflet/dist/images/marker-icon.png";
+import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
+import markerShadow from "leaflet/dist/images/marker-shadow.png";
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
-  iconRetinaUrl: `${iconBase}/marker-icon-2x.png`,
-  iconUrl: `${iconBase}/marker-icon.png`,
-  shadowUrl: `${iconBase}/marker-shadow.png`,
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
 });
 
-// Black-and-white teardrop. visited = solid black; unvisited = white with a
-// thick black ring; warn = filled red. No gradients. Drop shadow is a soft
-// rgba(0,0,0,0.2) — within the Uber whisper-shadow range.
+// Terracotta pins are places to explore; forest-green pins are visited.
 export function modernPin(kind = "unvisited") {
   const styles = {
-    visited: { fill: "#000000", stroke: "#000000", inner: "#ffffff" },
-    unvisited: { fill: "#ffffff", stroke: "#000000", inner: "#000000" },
+    visited: { fill: "#58784d", stroke: "#ffffff", inner: "#ffffff" },
+    unvisited: { fill: "#ce8964", stroke: "#ffffff", inner: "#ffffff" },
     warn: { fill: "#c1121f", stroke: "#c1121f", inner: "#ffffff" },
-    me: { fill: "#000000", stroke: "#000000", inner: "#ffffff" },
+    me: { fill: "#4f8b98", stroke: "#ffffff", inner: "#ffffff" },
   };
   const { fill, stroke, inner } = styles[kind] ?? styles.unvisited;
   const html = `
@@ -44,7 +44,7 @@ export function checkPin() {
     <div style="filter: drop-shadow(0 2px 6px rgba(0,0,0,0.35));">
       <svg width="34" height="42" viewBox="0 0 34 42" xmlns="http://www.w3.org/2000/svg">
         <path d="M17 0C7.61 0 0 7.61 0 17c0 12 17 25 17 25s17-13 17-25C34 7.61 26.39 0 17 0z"
-              fill="#000000" stroke="#ffffff" stroke-width="2.5"/>
+              fill="#58784d" stroke="#ffffff" stroke-width="2.5"/>
         <path d="M11 17 L15 21 L23 12"
               fill="none" stroke="#ffffff" stroke-width="2.8"
               stroke-linecap="round" stroke-linejoin="round"/>
@@ -65,13 +65,13 @@ export function meIcon() {
     <div style="position: relative; width: 22px; height: 22px;">
       <div style="
         position: absolute; inset: 0;
-        background: rgba(0, 0, 0, 0.18);
+        background: rgba(79, 139, 152, 0.25);
         border-radius: 50%;
         animation: tb-pulse 1.6s ease-out infinite;
       "></div>
       <div style="
         position: absolute; inset: 5px;
-        background: #000000;
+        background: #4f8b98;
         border: 2px solid #ffffff;
         border-radius: 50%;
         box-shadow: 0 1px 2px rgba(0,0,0,0.3);
@@ -96,7 +96,7 @@ export function meIcon() {
 export function trailDot() {
   const html = `<div style="
     width: 6px; height: 6px; border-radius: 50%;
-    background: #000000; border: 1.5px solid #ffffff;
+    background: #4f8b98; border: 1.5px solid #ffffff;
     box-shadow: 0 1px 2px rgba(0,0,0,0.3);
   "></div>`;
   return L.divIcon({
@@ -107,20 +107,18 @@ export function trailDot() {
   });
 }
 
-// Light, near-monochrome map tile layer (CARTO Positron).
+// OpenStreetMap's standard layer needs no account or API key. The browser
+// handles HTTP tile caching; we do not prefetch or package these tiles offline.
 export const LIGHT_TILE = {
-  url: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  url:
+    import.meta.env.VITE_MAP_TILE_URL ||
+    "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
   attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  subdomains: "abcd",
+    import.meta.env.VITE_MAP_ATTRIBUTION ||
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  subdomains: "abc",
 };
-
-export const DARK_TILE = {
-  url: "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-  attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  subdomains: "abcd",
-};
+export const DARK_TILE = { ...LIGHT_TILE, className: "dark-map-tiles" };
 
 export const SATELLITE_TILE = {
   url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",

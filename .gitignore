@@ -25,3 +25,8 @@ server/data/
 # Logs
 *.log
 npm-debug.log*
+
+# Local video extraction runtime
+server/.venv/
+__pycache__/
+*.pyc

@@ -4,8 +4,8 @@
   "description": "Track places, walks, and visits while you travel.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#000000",
+  "background_color": "#fbfaf5",
+  "theme_color": "#294f3b",
   "icons": [
     {
       "src": "/icon-192.svg",

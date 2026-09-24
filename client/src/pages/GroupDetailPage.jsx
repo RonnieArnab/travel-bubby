@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Plus, Copy, Users, Calendar, MapPin, BookOpen, ChevronLeft } from "lucide-react";
+import {
+  Plus,
+  Copy,
+  Users,
+  Calendar,
+  MapPin,
+  BookOpen,
+  ChevronLeft,
+} from "lucide-react";
 import { api } from "../lib/api.js";
 import { usePrefs } from "../lib/usePrefs.js";
 import { Toast } from "../components/Toast.jsx";
@@ -22,7 +30,9 @@ export function GroupDetailPage() {
       setError(e.message);
     }
   }
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [token]);
+  useEffect(() => {
+    load(); /* eslint-disable-next-line */
+  }, [token]);
 
   async function addTrip(e) {
     e.preventDefault();
@@ -39,7 +49,11 @@ export function GroupDetailPage() {
       setTripLocation("");
       await load();
     } catch (err) {
-      setToast({ kind: "warn", title: "Create trip failed", body: err.message });
+      setToast({
+        kind: "warn",
+        title: "Create trip failed",
+        body: err.message,
+      });
     } finally {
       setBusy(false);
     }
@@ -49,14 +63,23 @@ export function GroupDetailPage() {
     const url = `${window.location.origin}/groups/${token}`;
     navigator.clipboard?.writeText(url).then(
       () => setToast({ kind: "ok", title: "Share link copied" }),
-      () => setToast({ kind: "warn", title: "Copy failed", body: url })
+      () => setToast({ kind: "warn", title: "Copy failed", body: url }),
     );
   }
 
   if (error) {
     return (
       <div className="page">
-        <Link to="/groups" className="muted" style={{ display: "inline-flex", gap: 4, alignItems: "center", textDecoration: "none" }}>
+        <Link
+          to="/groups"
+          className="muted"
+          style={{
+            display: "inline-flex",
+            gap: 4,
+            alignItems: "center",
+            textDecoration: "none",
+          }}
+        >
           <ChevronLeft size={14} /> Groups
         </Link>
         <div className="empty">
@@ -69,7 +92,10 @@ export function GroupDetailPage() {
   if (!group) {
     return (
       <div className="page">
-        <div className="skeleton" style={{ height: 28, width: 200, marginBottom: 16 }} />
+        <div
+          className="skeleton"
+          style={{ height: 28, width: 200, marginBottom: 16 }}
+        />
         <div className="skeleton" style={{ height: 200, width: "100%" }} />
       </div>
     );
@@ -77,14 +103,31 @@ export function GroupDetailPage() {
 
   return (
     <div className="page">
-      <Link to="/groups" className="muted" style={{ display: "inline-flex", gap: 4, alignItems: "center", textDecoration: "none", marginBottom: 6 }}>
+      <Link
+        to="/groups"
+        className="muted"
+        style={{
+          display: "inline-flex",
+          gap: 4,
+          alignItems: "center",
+          textDecoration: "none",
+          marginBottom: 6,
+        }}
+      >
         <ChevronLeft size={14} /> Groups
       </Link>
       <div className="page-header">
         <div>
+          <div className="section-kicker">YOUR SHARED ADVENTURE</div>
           <h1>{group.name}</h1>
           <p className="subtitle">
-            Code <span className="tag" style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace" }}>{group.share_token}</span>
+            Code{" "}
+            <span
+              className="tag"
+              style={{ fontFamily: "ui-monospace, SFMono-Regular, monospace" }}
+            >
+              {group.share_token}
+            </span>
             <button
               className="ghost sm"
               onClick={copyLink}
@@ -96,22 +139,24 @@ export function GroupDetailPage() {
         </div>
       </div>
 
-      <div className="grid" style={{ gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1fr)", gap: 16 }}>
+      <div className="detail-layout crew-detail-layout">
         <div className="col">
           <form className="card col" onSubmit={addTrip}>
             <h3>Add a trip</h3>
             <div className="row" style={{ gap: 12, alignItems: "end" }}>
               <div style={{ flex: 2, minWidth: 180 }}>
-                <label>Trip name</label>
+                <label htmlFor="trip-name">Trip name</label>
                 <input
-                  placeholder="Tokyo May 2026"
+                  id="trip-name"
+                  placeholder="A week in Kyoto"
                   value={tripName}
                   onChange={(e) => setTripName(e.target.value)}
                 />
               </div>
               <div style={{ flex: 1, minWidth: 140 }}>
-                <label>Location</label>
+                <label htmlFor="trip-location">Location</label>
                 <input
+                  id="trip-location"
                   placeholder="Japan"
                   value={tripLocation}
                   onChange={(e) => setTripLocation(e.target.value)}
@@ -129,16 +174,42 @@ export function GroupDetailPage() {
           ) : (
             <div className="grid">
               {group.trips.map((t) => (
-                <Link key={t.id} to={`/trips/${t.id}`} className="card hover" style={{ textDecoration: "none", color: "inherit" }}>
+                <Link
+                  key={t.id}
+                  to={`/trips/${t.id}`}
+                  className="card hover"
+                  style={{ textDecoration: "none", color: "inherit" }}
+                >
                   <h3>{t.name}</h3>
                   {t.location && <div className="faint">{t.location}</div>}
-                  <div className="row" style={{ gap: 14, marginTop: 12, color: "var(--body-gray)", fontSize: 13 }}>
-                    <span><MapPin size={11} /> {t.place_count ?? 0} places</span>
+                  <div
+                    className="row"
+                    style={{
+                      gap: 14,
+                      marginTop: 12,
+                      color: "var(--body-gray)",
+                      fontSize: 13,
+                    }}
+                  >
+                    <span>
+                      <MapPin size={11} /> {t.place_count ?? 0} places
+                    </span>
                     <span>·</span>
-                    <span><BookOpen size={11} /> {t.guide_count ?? 0} guides</span>
+                    <span>
+                      <BookOpen size={11} /> {t.guide_count ?? 0} guides
+                    </span>
                   </div>
-                  <div className="faint" style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 4 }}>
-                    <Calendar size={11} /> Created {new Date(t.created_at).toLocaleDateString()}
+                  <div
+                    className="faint"
+                    style={{
+                      marginTop: 6,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <Calendar size={11} /> Created{" "}
+                    {new Date(t.created_at).toLocaleDateString()}
                   </div>
                 </Link>
               ))}
@@ -151,19 +222,33 @@ export function GroupDetailPage() {
             <h3 style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <Users size={16} />
               Members
-              <span className="badge" style={{ marginLeft: "auto" }}>{group.members.length}</span>
+              <span className="badge" style={{ marginLeft: "auto" }}>
+                {group.members.length}
+              </span>
             </h3>
             <div className="col" style={{ gap: 6, marginTop: 10 }}>
               {group.members.map((m) => (
-                <div key={m.id} style={{ display: "flex", justifyContent: "space-between", padding: "8px 12px", background: "var(--pill-bg)", borderRadius: "var(--radius-pill)" }}>
+                <div
+                  key={m.id}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    padding: "8px 12px",
+                    background: "var(--pill-bg)",
+                    borderRadius: "var(--radius-pill)",
+                  }}
+                >
                   <span>{m.name}</span>
-                  <span className="faint">{new Date(m.joined_at).toLocaleDateString()}</span>
+                  <span className="faint">
+                    {new Date(m.joined_at).toLocaleDateString()}
+                  </span>
                 </div>
               ))}
             </div>
             <div className="divider" />
             <div className="muted" style={{ fontSize: 13 }}>
-              Anyone with the share link above can join this group and add to it.
+              Anyone with the share link above can join this group and add to
+              it.
             </div>
           </div>
         </div>

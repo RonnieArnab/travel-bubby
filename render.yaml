@@ -25,7 +25,5 @@ services:
         value: /var/data
       - key: LOG_LEVEL
         value: INFO
-      # Set this manually in the Render dashboard after the first deploy
-      # (Service → Environment → Add Secret Env Var). Don't commit it here.
-      - key: GEMINI_API_KEY
-        sync: false
+      # This Node-only deployment supports manual imports. Local video/AI tools
+      # need a host with Python, FFmpeg, Tesseract, and Ollama; see VIDEO_IMPORT.md.

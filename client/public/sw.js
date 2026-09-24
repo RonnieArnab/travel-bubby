@@ -8,7 +8,7 @@
 // We do NOT cache /api/* — that always hits the network. Offline writes are
 // handled by an IndexedDB queue in the page (see lib/offlineQueue.js).
 
-const SW_VERSION = "tb-1";
+const SW_VERSION = "tb-2";
 const APP_CACHE = `tb-app-${SW_VERSION}`;
 const TILE_CACHE = `tb-tiles-${SW_VERSION}`;
 const TILE_CACHE_LIMIT = 800;
@@ -34,8 +34,7 @@ self.addEventListener("activate", (event) => {
 
 function isTileRequest(url) {
   return (
-    /(^|\.)basemaps\.cartocdn\.com$/.test(url.hostname) ||
-    /(^|\.)tile\.openstreetmap\.org$/.test(url.hostname)
+    /(^|\.)basemaps\.cartocdn\.com$/.test(url.hostname)
   );
 }
 
